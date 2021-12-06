@@ -1,20 +1,14 @@
 import random
 import numpy as np
+from sklearn.utils import shuffle
 F_P = 0.5
 CR_P = 0.9
 NP = 5
 D = 5
-Population = []
-fitness = []
+Population = np.zeros((NP,D))
+fitness = np.zeros(NP)
 UB = 100
 LB = -100
-for i in range(0,NP) :
-    Population.append([0 for c in range(0, D)])
-
-#print data
-def print_array(array, Nb_row):
-    for i in range(0,Nb_row):
-        print(array[i])
 
 #generate random solutions between -100 and 100
 def initialization(array, UB, LB,NP,D):
@@ -23,8 +17,20 @@ def initialization(array, UB, LB,NP,D):
 
 
 #mutation
-def mutation(population, mutated_population, NP,D,F):
-
-
+def mutation(population, mutated_population, NP,D,F_P):
+    random_vector1 = np.zeros((NP,5))
+    for i in range(NP):
+        random_vector1[i] = np.random.choice(np.arange(0, NP), replace=False, size=NP)
+    for i in range(NP):
+        mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P * (population[int(random_vector1[i,2]),:]-population[int(random_vector1[i,3]),:])
+   # print(mutated_population)
+    
+     
 
 Population = initialization(Population, UB, LB,NP,D)
+mutated_population = np.zeros((NP,D))
+mutation(Population, mutated_population, NP,D,F_P)
+
+#crossover
+def crossover(population,mutated_population, NP, D, CR_P):
+    p = 0.5
