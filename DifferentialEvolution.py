@@ -23,7 +23,7 @@ def mutation(population, mutated_population, NP,D,F_P):
         random_vector1[i] = np.random.choice(np.arange(0, NP), replace=False, size=NP)
     for i in range(NP):
         mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P * (population[int(random_vector1[i,2]),:]-population[int(random_vector1[i,3]),:])
-   # print(mutated_population)
+    print(mutated_population)
     
      
 
