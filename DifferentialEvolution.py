@@ -24,7 +24,7 @@ def mutation(population, mutated_population, NP,D,F_P):
     for i in range(NP):
         mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P * (population[int(random_vector1[i,2]),:]-population[int(random_vector1[i,3]),:])
     print(mutated_population)
-    
+    print("im here")
      
 
 Population = initialization(Population, UB, LB,NP,D)
