@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.utils import shuffle
 from eval import gtopx
 from eval import print_results
+from boundaries import Define_boundaries
 F_P = 0.5 #mutation parameter
 CR_P = 0.5 #crossover parameter
 NP = 5 #Population size 
@@ -11,8 +12,6 @@ Population = np.zeros((NP,D)) #original population
 mutated_population = np.zeros((NP,D)) # mutated population
 crossed_population = np.zeros((NP,D)) # crossed population
 fitness = np.zeros(NP)
-UB = 100
-LB = -100
 
 #generate random solutions between -100 and 100
 def initialization(array, UB, LB,NP,D):
@@ -39,23 +38,18 @@ def crossover(population,mutated_population, crossed_population, NP, D, CR_P):
            else :
                crossed_population[i,j] = population[i,j]
 
-#test
-#Population = initialization(Population, UB, LB,NP,D)
-#print("original population")
-#print(Population)
-#mutation(Population, mutated_population, NP,D,F_P)
-#print("mutated population")
-#print(mutated_population)
-#crossover(Population,mutated_population, crossed_population, NP, D, CR_P)
-#print("crossed population")
-#print(crossed_population)
-benchmark = 1; print("\n Cassini1 ")
-o  = 1; # number of objectives 
-n  = 6; # number of variables 
-ni = 0; # number of integer variables 
-m  = 4; # number of constraints    
-xl = [-1000.0,30.0,100.0,30.0,400.0,1000.0] # lower bounds
-xu = [0.0,400.0,470.0,400.0,2000.0,6000.0]  # upper bounds
-x  = [-789.759878, 158.29826, 449.38588, 54.7171393, 1024.686,  4552.799163] # best known solution
-[f,g] = gtopx( benchmark, x,o,n,m ) # evaluate solution x
-print_results(f,g)
+#boundaries handling
+def boundaries_handling(UB, LB, population, D, num_benchmark, NP):
+    for i in range(NP):
+        # handling the integer variables for function 8 of gtopx by rounding them to the closest integer
+        if (num_benchmark == 8) :
+            for j in range(6,10):
+               population[i,j] = round(population[i,j])
+              
+        # Bounding the violating variables to their upper bound
+        population[i,:] = np.minimum(UB, population[i,:])
+        # Bounding the violating variables to their lower bound
+        population[i,:] = np.maximum(LB, population[i,:])
+    return population
+
+

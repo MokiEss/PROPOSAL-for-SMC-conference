@@ -1,4 +1,4 @@
-def Define_boundaries(num_function, xu, xl, n, m) :
+def Define_boundaries(num_function) :
     if num_function == 1 :
         o  = 1; # number of objectives 
         n  = 6; # number of variables 
@@ -62,3 +62,5 @@ def Define_boundaries(num_function, xu, xl, n, m) :
         m  = 4; # number of constraints    
         xl = [-1000.0,30.0,100.0,30.0,400.0,1000.0,   1.0,1.0,1.0,1.0]
         xu = [0.0,400.0,470.0,400.0,2000.0,6000.0,    9.0,9.0,9.0,9.0]
+    return xu, xl, n, m
+        
