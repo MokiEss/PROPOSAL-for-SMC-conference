@@ -4,19 +4,12 @@ from sklearn.utils import shuffle
 from eval import gtopx
 from eval import print_results
 from boundaries import Define_boundaries
-F_P = 0.5 #mutation parameter
-CR_P = 0.5 #crossover parameter
-NP = 5 #Population size 
-D = 5 #dimension
-Population = np.zeros((NP,D)) #original population  
-mutated_population = np.zeros((NP,D)) # mutated population
-crossed_population = np.zeros((NP,D)) # crossed population
-fitness = np.zeros(NP)
+
 
 #generate random solutions between -100 and 100
-def initialization(array, UB, LB,NP,D):
-    array = np.random.uniform(LB, UB, size=(NP,D))
-    return array
+def initialization(population, UB, LB,NP,D):
+    population = np.random.uniform(LB, UB, size=(NP,D))
+    return population
 
 
 #mutation
@@ -25,7 +18,8 @@ def mutation(population, mutated_population, NP,D,F_P):
     for i in range(NP):
         random_vector1[i] = np.random.choice(np.arange(0, NP), replace=False, size=NP)
     for i in range(NP):
-        mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P * (population[int(random_vector1[i,2]),:]-population[int(random_vector1[i,3]),:])
+        mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P[i] * (population[int(random_vector1[i,2]),:]-population[int(random_vector1[i,3]),:])
+    return mutated_population
   
 #crossover
 def crossover(population,mutated_population, crossed_population, NP, D, CR_P):
@@ -33,17 +27,21 @@ def crossover(population,mutated_population, crossed_population, NP, D, CR_P):
         # Generating the random varibale delta
         dim = np.random.randint(0,D)
         for j in range(D):
-           if (np.random.uniform()<CR_P or dim == j):
-               crossed_population[i,j] = mutated_population[i,j]
+           # Check for donor vector or target vector
+           if (np.random.uniform()<CR_P[i] or dim == j):
+               # Accept variable from donor vector
+               crossed_population[i,j] = mutated_population[i,j] 
            else :
-               crossed_population[i,j] = population[i,j]
+               # Accept variable from target vector
+               crossed_population[i,j] = population[i,j] 
+    return crossed_population
 
 #boundaries handling
 def boundaries_handling(UB, LB, population, D, num_benchmark, NP):
     for i in range(NP):
         # handling the integer variables for function 8 of gtopx by rounding them to the closest integer
         if (num_benchmark == 8) :
-            for j in range(6,10):
+            for j in range(6,10): # from 6 to 10 are the integer variables of function 8 of gtopx
                population[i,j] = round(population[i,j])
               
         # Bounding the violating variables to their upper bound
@@ -52,4 +50,19 @@ def boundaries_handling(UB, LB, population, D, num_benchmark, NP):
         population[i,:] = np.maximum(LB, population[i,:])
     return population
 
+#evaluation
+def Evaluate_population(function_num, population, fitness_vector, NP, o,n,m):
+   # C = []
+    for i in range(NP):
+        fitness_vector = gtopx( function_num, population[i,:],o,n,m )
+       # C.extend(c)
+    #return the fitness vector of the population and the values for constraints
+    return fitness_vector
 
+#selection of the new generation
+def Selection(crossed_population, population, fitness_vector, fitness_of_crossed, NP):
+    for i in range(NP):
+        if fitness_of_crossed[i] < fitness_vector[i]: #greedy selection
+            population[i,:] = crossed_population[i,:]                    # Include the new solution in population
+            fitness_vector[i] = fitness_of_crossed[i]
+    return population, fitness_vector
