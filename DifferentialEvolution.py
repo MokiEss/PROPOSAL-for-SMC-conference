@@ -51,13 +51,14 @@ def boundaries_handling(UB, LB, population, D, num_benchmark, NP):
     return population
 
 #evaluation
-def Evaluate_population(function_num, population, fitness_vector, NP, o,n,m):
-   # C = []
+def Evaluate_population(function_num, population, fitness, constraints, NP, o,n,m):
     for i in range(NP):
-        fitness_vector = gtopx( function_num, population[i,:],o,n,m )
-       # C.extend(c)
+        fitness_vector, c = gtopx( function_num, population[i],o,n,m )
+        fitness[i] = fitness_vector[0]
+        for j in range(m):
+            constraints[i,j] = c[j]
     #return the fitness vector of the population and the values for constraints
-    return fitness_vector
+    return fitness,constraints
 
 #selection of the new generation
 def Selection(crossed_population, population, fitness_vector, fitness_of_crossed, NP):
