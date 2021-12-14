@@ -1,4 +1,5 @@
 def Define_boundaries(num_function) :
+    pi=3.14159265359
     if num_function == 1 :
         o  = 1; # number of objectives 
         n  = 6; # number of variables 

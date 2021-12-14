@@ -14,11 +14,11 @@ def initialization(population, UB, LB,NP,D):
 
 #mutation
 def mutation(population, mutated_population, NP,D,F_P):
-    random_vector1 = np.zeros((NP,5))
+    random_vector1 = np.zeros((NP,NP))
     for i in range(NP):
         random_vector1[i] = np.random.choice(np.arange(0, NP), replace=False, size=NP)
     for i in range(NP):
-        mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P[i] * (population[int(random_vector1[i,2]),:]-population[int(random_vector1[i,3]),:])
+        mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P[i] * (population[i,:]-population[int(random_vector1[i,3]),:]) + F_P[i] * (population[int(random_vector1[i,4]),:]-population[int(random_vector1[i,5]),:])
     return mutated_population
   
 #crossover
@@ -67,3 +67,18 @@ def Selection(crossed_population, population, fitness_vector, fitness_of_crossed
             population[i,:] = crossed_population[i,:]                    # Include the new solution in population
             fitness_vector[i] = fitness_of_crossed[i]
     return population, fitness_vector
+
+#reduction of the population
+def Reduce_population(population, fitness, NP, maxNP, minNP, it, maxIT):
+    plan_pop_size = round((((minNP - maxNP) / maxIT) * it) + maxNP)
+    if NP > plan_pop_size:
+        reduction_ind_num = NP - plan_pop_size
+        if NP - reduction_ind_num < minNP:
+            reduction_ind_num = NP - minNP
+        indbest = np.argsort(fitness)
+        for r in range(1,reduction_ind_num+1):
+            worstind = indbest[NP-r]
+            fitness = np.delete(fitness,worstind)
+            population = np.delete(population,worstind,0)
+        NP = NP - reduction_ind_num
+    return population, fitness, NP
