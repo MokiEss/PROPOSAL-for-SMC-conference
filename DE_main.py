@@ -41,7 +41,7 @@ def optimize():
     while (it<Evaluation_number):
       # 1- mutate
       F_P = np.random.uniform(size=NP)
-      mutated_population = DE.mutation(Population, mutated_population, NP,D,F_P)
+      mutated_population = DE.mutation(Population, fitness_population,mutated_population,NP,D,F_P)
       
       # 2- cross
       CR_P = np.random.uniform(size=NP)

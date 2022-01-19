@@ -4,21 +4,29 @@ from sklearn.utils import shuffle
 from eval import gtopx
 from eval import print_results
 from boundaries import Define_boundaries
-
+import math as mt
 
 #generate random solutions between -100 and 100
 def initialization(population, UB, LB,NP,D):
     population = np.random.uniform(LB, UB, size=(NP,D))
     return population
 
+#get the one of the best 10% solutions in the population
+def Get_Pbest_solution(population, NB_p_best_solution,Sorted_index):
+    index_best_solution = np.random.randint(0,NB_p_best_solution+1)
+    return population[Sorted_index[index_best_solution],:]
 
 #mutation
-def mutation(population, mutated_population, NP,D,F_P):
+def mutation(population, fitness, mutated_population, NP,D,F_P):
+    p = 0
+    Sorted_index =  np.argsort(fitness)
+    NB_p_best_solution = mt.floor(NP * p)
     random_vector1 = np.zeros((NP,NP))
     for i in range(NP):
         random_vector1[i] = np.random.choice(np.arange(0, NP), replace=False, size=NP)
     for i in range(NP):
-        mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P[i] * (population[i,:]-population[int(random_vector1[i,3]),:]) + F_P[i] * (population[int(random_vector1[i,4]),:]-population[int(random_vector1[i,5]),:])
+        best_known_solution = Get_Pbest_solution(population, NB_p_best_solution,Sorted_index)
+        mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P[i] * (best_known_solution-population[int(random_vector1[i,3]),:]) + F_P[i] * (population[int(random_vector1[i,4]),:]-population[int(random_vector1[i,5]),:])
     return mutated_population
   
 #crossover
@@ -82,3 +90,5 @@ def Reduce_population(population, fitness, NP, maxNP, minNP, it, maxIT):
             population = np.delete(population,worstind,0)
         NP = NP - reduction_ind_num
     return population, fitness, NP
+
+
