@@ -18,7 +18,7 @@ def Get_Pbest_solution(population, NB_p_best_solution,Sorted_index):
 
 #mutation
 def mutation(population, fitness, mutated_population, NP,D,F_P):
-    p = 0
+    p = 0.1
     Sorted_index =  np.argsort(fitness)
     NB_p_best_solution = mt.floor(NP * p)
     random_vector1 = np.zeros((NP,NP))
@@ -32,9 +32,8 @@ def mutation(population, fitness, mutated_population, NP,D,F_P):
 
 # compute covariance matrix and eigenvectors and transform the original population and the mutated one to the new eigen coordinates 
 def getEigenmatrix(population, mutated_population):
-    covariance_matrix = np.cov(population)
-    eigen = LA.eig(covariance_matrix)
-    print(eigen)
+    covariance_matrix = np.cov(population.T)
+    w, eigen = LA.eigh(covariance_matrix)
     eigen_population = np.matmul(population, eigen)
     eigen_mutated = np.matmul(mutated_population, eigen)
     return eigen_population, eigen_mutated, eigen

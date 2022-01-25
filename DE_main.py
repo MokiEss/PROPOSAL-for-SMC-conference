@@ -6,9 +6,9 @@ from eval import gtopx
 #the main optimize of DE
 def optimize():
     #initialize parameters and necessary data
-    num_function = 2 
+    num_function = 1 
     UB, LB, D, m = Define_boundaries(num_function) # get the upper bound, the lower bound, number of variables and number of constraints
-    NP = D * 14#Population size 
+    NP = D*14#Population size 
     maxNP = NP #max population size 
     minNP = 6  #min population size
     F_P = np.zeros(NP) + 0.5    #mutation parameter
@@ -43,14 +43,14 @@ def optimize():
       # 1- mutate
       F_P = np.random.uniform(size=NP)
       mutated_population = DE.mutation(Population, fitness_population,mutated_population,NP,D,F_P)
-      
+     
       # 2- cross
       CR_P = np.random.uniform(size=NP)
       eigen_population, eigen_mutated, eigen = DE.getEigenmatrix(Population,mutated_population)
-     # crossed_population = DE.crossover(Population,mutated_population, crossed_population, NP, D, CR_P)
+      #crossed_population = DE.crossover(Population,mutated_population, crossed_population, NP, D, CR_P)
       eigen_crossed_population = DE.crossover(eigen_population,eigen_mutated, eigen_crossed_population, NP, D, CR_P)
       # return the eigen crossed population to the original coordinates
-      crossed_population = np.matmul(eigen_crossed_population, eigen )
+      crossed_population = np.matmul(eigen_crossed_population, eigen.T )
       # 3- boundary handling
       crossed_population = DE.boundaries_handling(UB, LB, crossed_population, D, num_function, NP)
 
@@ -74,4 +74,5 @@ def optimize():
           
       it = it + NP
       print("the best solution so far is", fitness_best_solution, "current population size is", NP)
+      
 optimize()

@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>1fee2bfb-2e9d-46de-95da-640e57418424</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>DE_main.py</StartupFile>
+    <StartupFile>DifferentialEvolution.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
