@@ -17,6 +17,7 @@ def optimize():
     Population = np.zeros((NP,D)) #original population  
     mutated_population = np.zeros((NP,D)) # mutated population
     crossed_population = np.zeros((NP,D)) # crossed population
+    eigen_crossed_population = np.zeros((NP,D))
     fitness_population = np.zeros(NP)
     constraints = np.zeros((NP,m))
     BestKnown_solution = np.zeros(D)
@@ -45,8 +46,11 @@ def optimize():
       
       # 2- cross
       CR_P = np.random.uniform(size=NP)
-      crossed_population = DE.crossover(Population,mutated_population, crossed_population, NP, D, CR_P)
-     
+      eigen_population, eigen_mutated, eigen = DE.getEigenmatrix(Population,mutated_population)
+     # crossed_population = DE.crossover(Population,mutated_population, crossed_population, NP, D, CR_P)
+      eigen_crossed_population = DE.crossover(eigen_population,eigen_mutated, eigen_crossed_population, NP, D, CR_P)
+      # return the eigen crossed population to the original coordinates
+      crossed_population = np.matmul(eigen_crossed_population, eigen )
       # 3- boundary handling
       crossed_population = DE.boundaries_handling(UB, LB, crossed_population, D, num_function, NP)
 

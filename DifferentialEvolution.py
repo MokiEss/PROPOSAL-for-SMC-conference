@@ -5,7 +5,7 @@ from eval import gtopx
 from eval import print_results
 from boundaries import Define_boundaries
 import math as mt
-
+from numpy import linalg as LA
 #generate random solutions between -100 and 100
 def initialization(population, UB, LB,NP,D):
     population = np.random.uniform(LB, UB, size=(NP,D))
@@ -28,7 +28,17 @@ def mutation(population, fitness, mutated_population, NP,D,F_P):
         best_known_solution = Get_Pbest_solution(population, NB_p_best_solution,Sorted_index)
         mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P[i] * (best_known_solution-population[int(random_vector1[i,3]),:]) + F_P[i] * (population[int(random_vector1[i,4]),:]-population[int(random_vector1[i,5]),:])
     return mutated_population
-  
+ 
+
+# compute covariance matrix and eigenvectors and transform the original population and the mutated one to the new eigen coordinates 
+def getEigenmatrix(population, mutated_population):
+    covariance_matrix = np.cov(population)
+    eigen = LA.eig(covariance_matrix)
+    print(eigen)
+    eigen_population = np.matmul(population, eigen)
+    eigen_mutated = np.matmul(mutated_population, eigen)
+    return eigen_population, eigen_mutated, eigen
+
 #crossover
 def crossover(population,mutated_population, crossed_population, NP, D, CR_P):
     for i in range(NP):
