@@ -11,7 +11,8 @@ def optimize():
     NP = D*14#Population size 
     maxNP = NP #max population size 
     minNP = 6  #min population size
-    F_P = np.zeros(NP) + 0.5    #mutation parameter
+    
+    F_P = np.zeros((NP,D)) + 0.5    #mutation parameter
     CR_P = np.zeros(NP) + 0.5 #crossover parameter
     Evaluation_number = 500000
     Population = np.zeros((NP,D)) #original population  
@@ -41,16 +42,16 @@ def optimize():
     #while stopping criteria is not met
     while (it<Evaluation_number):
       # 1- mutate
-      F_P = np.random.uniform(size=NP)
+      F_P = np.random.uniform(size=(NP,D))
       mutated_population = DE.mutation(Population, fitness_population,mutated_population,NP,D,F_P)
      
       # 2- cross
-      CR_P = np.random.uniform(size=NP)
+      #CR_P = np.random.uniform(size=NP)
       eigen_population, eigen_mutated, eigen = DE.getEigenmatrix(Population,mutated_population)
-      crossed_population = DE.crossover(Population,mutated_population, crossed_population, NP, D, CR_P)
-      #eigen_crossed_population = DE.crossover(eigen_population,eigen_mutated, eigen_crossed_population, NP, D, CR_P)
+      #crossed_population = DE.crossover(Population,mutated_population, crossed_population, NP, D, CR_P)
+      eigen_crossed_population = DE.crossover(eigen_population,eigen_mutated, eigen_crossed_population, NP, D, CR_P)
       # return the eigen crossed population to the original coordinates
-      #crossed_population = np.matmul(eigen_crossed_population, eigen.T )
+      crossed_population = np.matmul(eigen_crossed_population, eigen.T )
       # 3- boundary handling
       crossed_population = DE.boundaries_handling(UB, LB, crossed_population, D, num_function, NP)
 
@@ -60,8 +61,8 @@ def optimize():
       
       fitness_crossed, constraints_crossed = DE.Evaluate_population(num_function, crossed_population, fitness_crossed,constraints_crossed ,NP, 1,D,m)
       
-      # 5- Select the fitest solutions for the next generation
-      Population, fitness_population = DE.Selection(crossed_population, Population, fitness_population, fitness_crossed, NP)
+      # 5- Select the fitest solutions for the next generation, determine the successfull F parameters and compute the fitness differences
+      Population, fitness_population, difference_fitness = DE.Selection(crossed_population, Population, fitness_population, fitness_crossed, NP, F_P,D)
 
       # 6- Get rid of a fraction of the worst solution 
       Population, fitness_population, NP = DE.Reduce_population(Population, fitness_population, NP, maxNP, minNP, it, Evaluation_number)
@@ -76,3 +77,4 @@ def optimize():
       print("the best solution so far is", fitness_best_solution, "current population size is", NP)
       
 optimize()
+

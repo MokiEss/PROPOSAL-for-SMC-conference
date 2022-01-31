@@ -26,7 +26,7 @@ def mutation(population, fitness, mutated_population, NP,D,F_P):
         random_vector1[i] = np.random.choice(np.arange(0, NP), replace=False, size=NP)
     for i in range(NP):
         best_known_solution = Get_Pbest_solution(population, NB_p_best_solution,Sorted_index)
-        mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P[i] * (best_known_solution-population[int(random_vector1[i,3]),:]) + F_P[i] * (population[int(random_vector1[i,4]),:]-population[int(random_vector1[i,5]),:])
+        mutated_population[i,:] = population[int(random_vector1[i,1]),:] + F_P[i,:] * (best_known_solution-population[int(random_vector1[i,3]),:]) + F_P[i,:] * (population[int(random_vector1[i,4]),:]-population[int(random_vector1[i,5]),:])
     return mutated_population
  
 
@@ -78,12 +78,19 @@ def Evaluate_population(function_num, population, fitness, constraints, NP, o,n,
     return fitness,constraints
 
 #selection of the new generation
-def Selection(crossed_population, population, fitness_vector, fitness_of_crossed, NP):
+def Selection(crossed_population, population, fitness_vector, fitness_of_crossed, NP, F_P,D):
+    SF_P = np.empty((0,D), dtype=float) #array to store succefull parmaters of F
+    dif_fitness = np.zeros(NP)
     for i in range(NP):
         if fitness_of_crossed[i] < fitness_vector[i]: #greedy selection
+            dif_fitness[i] = fitness_vector[i] - fitness_of_crossed[i]
+            SF_P = np.vstack([SF_P,F_P[i,:]])
             population[i,:] = crossed_population[i,:]                    # Include the new solution in population
             fitness_vector[i] = fitness_of_crossed[i]
-    return population, fitness_vector
+    # normalize differences of fitness to use it as weights later
+    norm = np.linalg.norm(dif_fitness)
+    difference_fitness = dif_fitness/norm
+    return population, fitness_vector, difference_fitness
 
 #reduction of the population
 def Reduce_population(population, fitness, NP, maxNP, minNP, it, maxIT):

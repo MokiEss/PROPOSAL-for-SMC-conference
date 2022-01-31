@@ -27,6 +27,9 @@
     <Compile Include="boundaries.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DEV2.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DE_main.py">
       <SubType>Code</SubType>
     </Compile>
