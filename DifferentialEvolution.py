@@ -90,7 +90,30 @@ def Selection(crossed_population, population, fitness_vector, fitness_of_crossed
     # normalize differences of fitness to use it as weights later
     norm = np.linalg.norm(dif_fitness)
     difference_fitness = dif_fitness/norm
-    return population, fitness_vector, difference_fitness
+    return population, fitness_vector, difference_fitness, SF_P
+
+#generate F parameter for each dimension to each solution
+def Generate_F_parameter(SF_P,difference_fitness,D,F_P,NP):
+    Nb_successful_parameters ,col = SF_P.shape
+    weights = np.zeros(D)
+
+    #compute the sum of fitness differences
+    for i in range(Nb_successful_parameters):
+         sum = sum + difference_fitness[i]
+
+    #compute the weighted factors for each dimension
+    for i in range(D):
+        for j in range(Nb_successful_parameters):
+            weights[i] = weights[i] + (SF_P[j,i]*difference_fitness[j])
+        weights[i] = weights[i]/sum
+    #generate F parameter for each dimension for each solution based on cauchy distribution
+    for i in range(NP):
+        for j in range(D):
+            F_P[i,j] = weights[j] + 0.1*mt.tan(mt.pi*(np.random.uniform()-0.5))
+            while F_P[i,j] <= 0:
+                F_P[i,j] = weights[j] + 0.1*mt.tan(mt.pi*(np.random.uniform()-0.5))
+            F_P[i,j] = min(F_P[i,j],0.99)
+    return F_P
 
 #reduction of the population
 def Reduce_population(population, fitness, NP, maxNP, minNP, it, maxIT):
