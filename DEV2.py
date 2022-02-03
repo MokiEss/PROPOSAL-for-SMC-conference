@@ -6,13 +6,13 @@ from eval import gtopx
 #the main optimize of DE
 def optimize():
     #initialize parameters and necessary data
-    num_function = 2 
+    num_function = 1 
     UB, LB, D, m = Define_boundaries(num_function) # get the upper bound, the lower bound, number of variables and number of constraints
     NP = D*14#Population size 
     maxNP = NP #max population size 
     minNP = 6  #min population size
     
-    F_P = np.zeros((NP,D)) + 0.5    #mutation parameter
+    F_P = np.zeros((D)) + 0.5    #mutation parameter
     CR_P = np.zeros(NP) + 0.8 #crossover parameter
     Evaluation_number = 500000
     Population = np.zeros((NP,D)) #original population  
@@ -42,7 +42,7 @@ def optimize():
     #while stopping criteria is not met
     while (it<Evaluation_number):
       # 1- mutate
-      F_P = np.random.uniform(size=(NP,D))
+     # F_P = np.random.uniform(size=(NP,D))
       mutated_population = DE.mutation(Population, fitness_population,mutated_population,NP,D,F_P)
      
       # 2- cross
@@ -62,18 +62,22 @@ def optimize():
       fitness_crossed, constraints_crossed = DE.Evaluate_population(num_function, crossed_population, fitness_crossed,constraints_crossed ,NP, 1,D,m)
       
       # 5- Select the fitest solutions for the next generation, determine the successfull F parameters and compute the fitness differences
-      Population, fitness_population, difference_fitness = DE.Selection(crossed_population, Population, fitness_population, fitness_crossed, NP, F_P,D)
+      #Population, fitness_population, difference_fitness = DE.Selection(crossed_population, Population, fitness_population, fitness_crossed, NP, F_P,D)
+      Population, fitness_population, difference_fitness,Nb_successful_parameters = DE.Selection(crossed_population, Population, fitness_population, fitness_crossed, NP, F_P,D)
 
-      # 6- Get rid of a fraction of the worst solution 
+      # 6- Generate new F values for each dimension and solution based on Cauchy distribution
+      F_P = DE.Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters)
+
+      # 7- Get rid of a fraction of the worst solution 
       Population, fitness_population, NP = DE.Reduce_population(Population, fitness_population, NP, maxNP, minNP, it, Evaluation_number)
       
-      # 6- Get the best known solution and print it
+      # 8- Get the best known solution and print it
       if (fitness_best_solution>np.amin(fitness_population)):
           fitness_best_solution = np.amin(fitness_population)
           index_min = np.where(fitness_population == np.amin(fitness_population))
-          BestKnown_solution = Population[int(index_min[0]),:]
-          
+          BestKnown_solution = Population[int(index_min[0]),:]   
       it = it + NP
+      
       print("the best solution so far is", fitness_best_solution, "current population size is", NP)
       
 optimize()
