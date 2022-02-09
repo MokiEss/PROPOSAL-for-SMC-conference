@@ -12,9 +12,10 @@ def initialization(population, UB, LB,NP,D):
     return population
 
 #get the one of the best 10% solutions in the population
-def Get_Pbest_solution(population, NB_p_best_solution,Sorted_index):
+def Get_Pbest_solution(population, NB_p_best_solution,Sorted_index,NP):
     index_best_solution = np.random.randint(0,NB_p_best_solution+1)
-    return population[Sorted_index[index_best_solution],:]
+    index_worst_solution = (NP-1) - index_best_solution
+    return population[Sorted_index[index_best_solution],:], population[Sorted_index[index_worst_solution],:]
 
 #mutation
 def mutation(population, fitness, mutated_population, NP,D,F_P):
@@ -25,9 +26,16 @@ def mutation(population, fitness, mutated_population, NP,D,F_P):
     for i in range(NP):
         random_vector1[i] = np.random.choice(np.arange(0, NP), replace=False, size=NP)
     for i in range(NP):
-        best_known_solution = Get_Pbest_solution(population, NB_p_best_solution,Sorted_index)
-        for j in range(D):
-            mutated_population[i,j] = population[int(random_vector1[i,1]),j] + F_P[j] * (best_known_solution[j]-population[int(random_vector1[i,3]),j]) + F_P[j] * (population[int(random_vector1[i,4]),j]-population[int(random_vector1[i,5]),j])
+        best_known_solution, worst_known_solution  = Get_Pbest_solution(population, NB_p_best_solution,Sorted_index,NP)
+        if np.random.uniform() > 0.5 :
+            for j in range(D):
+                mutated_population[i,j] = population[i,j] + F_P[i,j] * (best_known_solution[j] - population[int(random_vector1[i,1]),j]) + F_P[i,j] * (population[int(random_vector1[i,2]),j]-worst_known_solution[j])
+        else :
+            for j in range(D):
+                    mutated_population[i,j] = population[i,j] + F_P[i,j] * (best_known_solution[j]-population[int(random_vector1[i,3]),j]) + F_P[i,j] * (population[int(random_vector1[i,4]),j]-population[int(random_vector1[i,5]),j])
+
+                # mutated_population[i,j] = F_P[i,j] * population[i,j] + (best_known_solution[j] - population[int(random_vector1[i,1]),j])
+           
     return mutated_population
  
 
@@ -80,14 +88,14 @@ def Evaluate_population(function_num, population, fitness, constraints, NP, o,n,
 
 #selection of the new generation
 def Selection(crossed_population, population, fitness_vector, fitness_of_crossed, NP, F_P,D):
-    #SF_P = np.empty((0,D), dtype=float) #array to store successfull parmaters of F
+    SF_P = np.empty((0,D), dtype=float) #array to store successfull parmaters of F
     dif_fitness = np.zeros(NP)
     difference_fitness = np.zeros(NP)
     Nb_successful_parameters = 0
     for i in range(NP):
         if fitness_of_crossed[i] < fitness_vector[i]: #greedy selection
             dif_fitness[i] = fitness_vector[i] - fitness_of_crossed[i]
-            #SF_P = np.vstack([SF_P,F_P[i,:]])
+            SF_P = np.vstack([SF_P,F_P[i,:]])
             population[i,:] = crossed_population[i,:]                    # Include the new solution in population
             fitness_vector[i] = fitness_of_crossed[i]
             Nb_successful_parameters = Nb_successful_parameters + 1
@@ -95,39 +103,39 @@ def Selection(crossed_population, population, fitness_vector, fitness_of_crossed
     if Nb_successful_parameters>0:
         norm = np.linalg.norm(dif_fitness)
         difference_fitness = dif_fitness/norm
-    return population, fitness_vector, difference_fitness,Nb_successful_parameters
+    return population, fitness_vector, difference_fitness,Nb_successful_parameters,SF_P
 
 #generate F parameter for each dimension to each solution
-def Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters):
-    #Nb_successful_parameters ,col = SF_P.shape
-    weights = np.zeros(D)
-    weights2 = np.zeros(D)
-    sum = 0
-    #print(Nb_successful_parameters)
-    #compute the sum of fitness differences
-    if Nb_successful_parameters>0:
-        for i in range(Nb_successful_parameters):
-            sum = sum + difference_fitness[i]
-
-    #compute the weighted factors for each dimension
-        for i in range(D):
-            for j in range(Nb_successful_parameters):
-                weights[i] = weights[i] + (difference_fitness[j])
-                weights2[i] = weights2[i] + (difference_fitness[j]*difference_fitness[j])
-            weights[i] = weights2[i]/weights[i] #compute the lehmer mean for each dimension as a mean value for the cauchy distribution
-
-    #generate F parameter for each dimension for each solution based on cauchy distribution
-    else :
-        weights = weights + 0.5
+def Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters,SF_P,mu_by_dimension,index_mu_by_dimension):  
     
-    for j in range(D):
-        F_P[j] = weights[j] + 0.1*mt.tan(mt.pi*(np.random.uniform()-0.5))
-        while F_P[j] <= 0:
-              F_P[j] = weights[j] + 0.1*mt.tan(mt.pi*(np.random.uniform()-0.5))
+    if index_mu_by_dimension>4:
+        index_mu_by_dimension = 0
+    
+    #compute the contribution of each dimnension in improving the fitness value
+    if Nb_successful_parameters > 0 :
+        for i in range(D):
+            sum_by_dimension = 0
+            for j in range(Nb_successful_parameters):
+                sum_contribute = 0
+                for k in range(D):
+                    sum_contribute = sum_contribute + SF_P[j,k]
+                sum_by_dimension = sum_by_dimension + (SF_P[j,i]/sum_contribute)
+            mu_by_dimension[index_mu_by_dimension,i] = sum_by_dimension/Nb_successful_parameters
+        index_mu_by_dimension = index_mu_by_dimension + 1 
+
+    #randomly choose a mu value from the archive mu_by_dimension
+    mu_index = np.random.randint(0,5)
+    #generate F parameter for each dimension for each solution based on cauchy distribution
+   
+    for i in range(NP):
+        for j in range(D):
+            F_P[i,j] = mu_by_dimension[0,j] + 0.1*mt.tan(mt.pi*(np.random.uniform()-0.5))
+            while F_P[i,j] <= 0:
+                F_P[i,j] = mu_by_dimension[0,j] + 0.1*mt.tan(mt.pi*(np.random.uniform()-0.5))
                 
-        F_P[j] = min(F_P[j],0.99) #the value of F should be between 0 and 1
+            F_P[i,j] = min(F_P[i,j],0.99) #the value of F should be between 0 and 1
     #print(F_P)        
-    return F_P
+    return F_P,index_mu_by_dimension
 
 #reduction of the population
 def Reduce_population(population, fitness, NP, maxNP, minNP, it, maxIT):
