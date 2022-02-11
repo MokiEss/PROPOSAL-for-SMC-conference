@@ -89,6 +89,7 @@ def Evaluate_population(function_num, population, fitness, constraints, NP, o,n,
 #selection of the new generation
 def Selection(crossed_population, population, fitness_vector, fitness_of_crossed, NP, F_P,D):
     SF_P = np.empty((0,D), dtype=float) #array to store successfull parmaters of F
+    Successful_parents = np.empty((0,D), dtype=float) #array to store successfull parents
     dif_fitness = np.zeros(NP)
     difference_fitness = np.zeros(NP)
     Nb_successful_parameters = 0
@@ -96,6 +97,7 @@ def Selection(crossed_population, population, fitness_vector, fitness_of_crossed
         if fitness_of_crossed[i] < fitness_vector[i]: #greedy selection
             dif_fitness[i] = fitness_vector[i] - fitness_of_crossed[i]
             SF_P = np.vstack([SF_P,F_P[i,:]])
+            Successful_parents = np.vstack([Successful_parents,population[i,:]])
             population[i,:] = crossed_population[i,:]                    # Include the new solution in population
             fitness_vector[i] = fitness_of_crossed[i]
             Nb_successful_parameters = Nb_successful_parameters + 1
@@ -103,39 +105,56 @@ def Selection(crossed_population, population, fitness_vector, fitness_of_crossed
     if Nb_successful_parameters>0:
         norm = np.linalg.norm(dif_fitness)
         difference_fitness = dif_fitness/norm
-    return population, fitness_vector, difference_fitness,Nb_successful_parameters,SF_P
+    return population, fitness_vector, difference_fitness,Nb_successful_parameters,SF_P,Successful_parents
 
 #generate F parameter for each dimension to each solution
-def Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters,SF_P,mu_by_dimension,index_mu_by_dimension):  
+def Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters,SF_P,mu_by_dimension,index_mu_by_dimension,mu_archive_size,Successful_parents):  
     
-    if index_mu_by_dimension>4:
-        index_mu_by_dimension = 0
+    if index_mu_by_dimension>mu_archive_size-1:
+       index_mu_by_dimension = 0
     
     #compute the contribution of each dimnension in improving the fitness value
     if Nb_successful_parameters > 0 :
+        # 1- normalize the Successful_parents to compute the contribution of each dimension
+        for i in range(Nb_successful_parameters):
+            norm = np.linalg.norm(Successful_parents[i,:])
+            Successful_parents[i,:] = Successful_parents[i,:]/norm
+        
         for i in range(D):
+            sum_by_dimension_2 = 0
             sum_by_dimension = 0
             for j in range(Nb_successful_parameters):
                 sum_contribute = 0
                 for k in range(D):
-                    sum_contribute = sum_contribute + SF_P[j,k]
-                sum_by_dimension = sum_by_dimension + (SF_P[j,i]/sum_contribute)
-            mu_by_dimension[index_mu_by_dimension,i] = sum_by_dimension/Nb_successful_parameters
+                    sum_contribute = sum_contribute + Successful_parents[j,k]
+                sum_by_dimension_2 = sum_by_dimension_2 + ((Successful_parents[j,i]/sum_contribute)*SF_P[j,i])**2
+                sum_by_dimension = sum_by_dimension + ((Successful_parents[j,i]/sum_contribute)*SF_P[j,i]) 
+         
+        #avoid nan values for mu_by_dimension
+            if mt.isnan(sum_by_dimension_2/sum_by_dimension) :
+                mu_by_dimension[index_mu_by_dimension,i] = 1/D
+            else :
+                mu_by_dimension[index_mu_by_dimension,i] = sum_by_dimension_2/sum_by_dimension
+        #normalize mu_by_dimension so that the sum of columns of a given row gives 1
+        norm = np.linalg.norm(mu_by_dimension[index_mu_by_dimension,:])
+        mu_by_dimension[index_mu_by_dimension,:] = mu_by_dimension[index_mu_by_dimension,:]/norm
         index_mu_by_dimension = index_mu_by_dimension + 1 
+    
 
     #randomly choose a mu value from the archive mu_by_dimension
-    mu_index = np.random.randint(0,5)
+    
+    mu_index = np.random.randint(0,mu_archive_size)
     #generate F parameter for each dimension for each solution based on cauchy distribution
    
     for i in range(NP):
         for j in range(D):
-            F_P[i,j] = mu_by_dimension[0,j] + 0.1*mt.tan(mt.pi*(np.random.uniform()-0.5))
+            F_P[i,j] = mu_by_dimension[mu_index,j] + 0.1*mt.tan(mt.pi*(np.random.uniform()-0.5))
             while F_P[i,j] <= 0:
-                F_P[i,j] = mu_by_dimension[0,j] + 0.1*mt.tan(mt.pi*(np.random.uniform()-0.5))
+                F_P[i,j] = mu_by_dimension[mu_index,j] + 0.1*mt.tan(mt.pi*(np.random.uniform()-0.5))
                 
             F_P[i,j] = min(F_P[i,j],0.99) #the value of F should be between 0 and 1
     #print(F_P)        
-    return F_P,index_mu_by_dimension
+    return F_P,mu_by_dimension,index_mu_by_dimension
 
 #reduction of the population
 def Reduce_population(population, fitness, NP, maxNP, minNP, it, maxIT):
