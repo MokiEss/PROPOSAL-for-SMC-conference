@@ -36,7 +36,13 @@
     <Compile Include="DifferentialEvolution.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DifferentialEvolution_Mahmoud_problems.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="eval.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="objective_function.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="test.py">

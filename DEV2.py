@@ -1,14 +1,20 @@
-import DifferentialEvolution as DE
+#import DifferentialEvolution as DE
+import DifferentialEvolution_Mahmoud_problems as DE
 import numpy as np
 from boundaries import Define_boundaries
 from eval import gtopx
-
+import objective_function as of
 #the main optimize of DE
 def optimize():
     #initialize parameters and necessary data
-    num_function = 1 
-    UB, LB, D, m = Define_boundaries(num_function) # get the upper bound, the lower bound, number of variables and number of constraints
-    NP = D*14#Population size 
+    num_function = 1
+    node200 = of.NODEE200()
+    D = len(node200.Candidate_List)
+    #UB, LB, D, m = Define_boundaries(num_function) # get the upper bound, the lower bound, number of variables and number of constraints
+    
+    UB = np.ones(D)
+    LB = np.zeros(D)
+    NP = D*5#Population size 
     maxNP = NP #max population size 
     minNP = 6  #min population size
     mu_archive_size = 3
@@ -16,13 +22,13 @@ def optimize():
     index_mu_by_dimension = 0
     F_P = np.zeros((NP,D)) + 0.5    #mutation parameter
     CR_P = np.zeros(NP) + 0.8 #crossover parameter
-    Evaluation_number = 1000000
+    Evaluation_number = 10
     Population = np.zeros((NP,D)) #original population  
     mutated_population = np.zeros((NP,D)) # mutated population
     crossed_population = np.zeros((NP,D)) # crossed population
     eigen_crossed_population = np.zeros((NP,D))
     fitness_population = np.zeros(NP)
-    constraints = np.zeros((NP,m))
+    #constraints = np.zeros((NP,m))
     BestKnown_solution = np.zeros(D)
     fitness_best_solution = 10000000000
     it = 0
@@ -30,10 +36,10 @@ def optimize():
     Population = DE.initialization(Population,UB, LB,NP, D)
     
     #boundary handling for mixed_integer problems
-    Population = DE.boundaries_handling(UB, LB, Population, D, num_function, NP)
+    #Population = DE.boundaries_handling(UB, LB, Population, D, num_function, NP)
  
     #evaluation the population
-    fitness_population, constraints = DE.Evaluate_population(num_function, Population, fitness_population,constraints, NP, 1,D,m)
+    fitness_population = DE.Evaluate_population( Population, fitness_population, NP)
     
     #get the best known solution of the initial population
     fitness_best_solution = np.amin(fitness_population)
@@ -55,13 +61,13 @@ def optimize():
       # return the eigen crossed population to the original coordinates
       #crossed_population = np.matmul(eigen_crossed_population, eigen.T )
       # 3- boundary handling
-      crossed_population = DE.boundaries_handling(UB, LB, crossed_population, D, num_function, NP)
+      crossed_population = DE.boundaries_handling(UB, LB, crossed_population,D,  NP)
 
       # 4- Evaluation of crossed_population
       fitness_crossed = np.zeros(NP) #empty array to store the fitness of crossed population
-      constraints_crossed = np.zeros((NP,m)) #empty  2D array to store the constraints of crossed population
+      #constraints_crossed = np.zeros((NP,m)) #empty  2D array to store the constraints of crossed population
       
-      fitness_crossed, constraints_crossed = DE.Evaluate_population(num_function, crossed_population, fitness_crossed,constraints_crossed ,NP, 1,D,m)
+      fitness_crossed = DE.Evaluate_population( crossed_population, fitness_crossed,NP)
       
       # 5- Select the fitest solutions for the next generation, determine the successfull F parameters and compute the fitness differences
       #Population, fitness_population, difference_fitness = DE.Selection(crossed_population, Population, fitness_population, fitness_crossed, NP, F_P,D)
