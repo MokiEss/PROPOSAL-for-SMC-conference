@@ -6,6 +6,7 @@ from eval import print_results
 from boundaries import Define_boundaries
 import math as mt
 from numpy import linalg as LA
+import topsispy as tp
 #generate random solutions between -100 and 100
 def initialization(population, UB, LB,NP,D):
     population = np.random.uniform(LB, UB, size=(NP,D))
@@ -17,8 +18,30 @@ def Get_Pbest_solution(population, NB_p_best_solution,Sorted_index,NP):
     index_worst_solution = (NP-1) - index_best_solution
     return population[Sorted_index[index_best_solution],:], population[Sorted_index[index_worst_solution],:]
 
+
+#compute the average euclidean distance between individuals and the best solution so far
+def Average_euclidean_distance(population, best_solution, NP):
+    total_distance = 0
+    for i in range(NP):
+        total_distance = mt.sqrt(np.sum((population[i,:]-best_solution)**2))+total_distance
+    return total_distance/NP
+
+#compute the average standard deviation of the population as an exploration criteria
+def Average_standard_deviation(population,D):
+    total_standard_deviation = 0
+    for i in range(D):
+        total_standard_deviation = total_standard_deviation + np.std(population[:,i])
+    return total_standard_deviation/D
+
 #mutation
-def mutation(population, fitness, mutated_population, NP,D,F_P):
+def mutation(population, fitness, mutated_population, NP,D,F_P, number_of_improved_solution,criteria_values, operator_index, best_solution):
+
+    w = [1, 1, 1]
+    sign = [1, 1, 1]
+   
+    operator_index = int(tp.topsis(criteria_values, w, sign)[0])
+    #print("the strategy to be used is :",operator_index)
+    # end multi-criteria selection
     p = 0.1
     Sorted_index =  np.argsort(fitness)
     NB_p_best_solution = mt.floor(NP * p)
@@ -27,7 +50,7 @@ def mutation(population, fitness, mutated_population, NP,D,F_P):
         random_vector1[i] = np.random.choice(np.arange(0, NP), replace=False, size=NP)
     for i in range(NP):
         best_known_solution, worst_known_solution  = Get_Pbest_solution(population, NB_p_best_solution,Sorted_index,NP)
-        if np.random.uniform() > 0.5 :
+        if operator_index==1 :
             for j in range(D):
                 mutated_population[i,j] = population[i,j] + F_P[i,j] * (best_known_solution[j] - population[int(random_vector1[i,1]),j]) + F_P[i,j] * (population[int(random_vector1[i,2]),j]-worst_known_solution[j])
         else :
@@ -35,8 +58,16 @@ def mutation(population, fitness, mutated_population, NP,D,F_P):
                     mutated_population[i,j] = population[i,j] + F_P[i,j] * (best_known_solution[j]-population[int(random_vector1[i,3]),j]) + F_P[i,j] * (population[int(random_vector1[i,4]),j]-population[int(random_vector1[i,5]),j])
 
                 # mutated_population[i,j] = F_P[i,j] * population[i,j] + (best_known_solution[j] - population[int(random_vector1[i,1]),j])
-           
-    return mutated_population
+     
+    # begin multi_criteria selection to choose the mutation strategy
+    # 1st criteria : average euclidean distance to the best solution so far
+    criteria_values[operator_index,0] = Average_euclidean_distance(population, best_solution, NP)
+    # 2nd criteria : average standard deviation of the population
+    criteria_values[operator_index,1] = Average_standard_deviation(population,D)
+    # 3rd criteria : number of improved solutions
+    criteria_values[operator_index,2] = number_of_improved_solution
+    # prepare weights for criteria            
+    return mutated_population, operator_index, criteria_values
  
 
 # compute covariance matrix and eigenvectors and transform the original population and the mutated one to the new eigen coordinates 
@@ -127,7 +158,7 @@ def Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters,SF
                 sum_contribute = 0
                 for k in range(D):
                     sum_contribute = sum_contribute + Successful_parents[j,k]
-                sum_by_dimension_2 = sum_by_dimension_2 + ((Successful_parents[j,i]/sum_contribute)*SF_P[j,i])
+                sum_by_dimension_2 = sum_by_dimension_2 + ((Successful_parents[j,i]/sum_contribute)*SF_P[j,i])**2
                 sum_by_dimension = sum_by_dimension + ((Successful_parents[j,i]/sum_contribute)*SF_P[j,i])
          
         #avoid nan values for mu_by_dimension

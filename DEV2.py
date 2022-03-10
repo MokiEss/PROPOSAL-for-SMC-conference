@@ -7,7 +7,7 @@ from eval import gtopx
 #the main optimize of DE
 def optimize():
     #initialize parameters and necessary data
-    num_function = 1
+    num_function = 2
     
     UB, LB, D, m = Define_boundaries(num_function) # get the upper bound, the lower bound, number of variables and number of constraints
     NP = D*5#Population size 
@@ -28,6 +28,20 @@ def optimize():
     BestKnown_solution = np.zeros(D)
     fitness_best_solution = 10000000000
     it = 0
+
+
+    #initialize the multi criteria selection parameters
+    number_of_operators = 2
+    number_of_criteria = 3
+    number_of_improved_solution = NP/2
+    criteria_values = np.zeros((number_of_operators,number_of_criteria))
+    for i in range(number_of_operators):
+        for j in range(number_of_criteria):
+            criteria_values[i,j] =  np.random.uniform()
+            
+    criteria_values[:,2] = number_of_improved_solution # 3rd criterion: set NP/2 as a number of improved solutions for both operators        
+    operator_index = 0
+
     #initialize the original population
     Population = DE.initialization(Population,UB, LB,NP, D)
     
@@ -48,7 +62,7 @@ def optimize():
     while (it<Evaluation_number):
       # 1- mutate
       #F_P = np.random.uniform(size=(NP,D))
-      mutated_population = DE.mutation(Population, fitness_population,mutated_population,NP,D,F_P)
+      mutated_population,operator_index, criteria_values = DE.mutation(Population, fitness_population,mutated_population,NP,D,F_P, number_of_improved_solution,criteria_values, operator_index,BestKnown_solution)
      
       # 2- cross
       #CR_P = np.random.uniform(size=NP)
@@ -69,7 +83,7 @@ def optimize():
       # 5- Select the fitest solutions for the next generation, determine the successfull F parameters and compute the fitness differences
       #Population, fitness_population, difference_fitness = DE.Selection(crossed_population, Population, fitness_population, fitness_crossed, NP, F_P,D)
       Population, fitness_population, difference_fitness,Nb_successful_parameters,SF_P,Successful_parents = DE.Selection(crossed_population, Population, fitness_population, fitness_crossed, NP, F_P,D)
-     
+      number_of_improved_solution = Nb_successful_parameters
       # 6- Generate new F values for each dimension and solution based on Cauchy distribution
       F_P,mu_by_dimension,index_mu_by_dimension = DE.Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters,SF_P,mu_by_dimension,index_mu_by_dimension,mu_archive_size,Successful_parents, Population)
 
