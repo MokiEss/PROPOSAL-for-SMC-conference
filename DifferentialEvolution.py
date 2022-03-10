@@ -97,7 +97,7 @@ def Selection(crossed_population, population, fitness_vector, fitness_of_crossed
         if fitness_of_crossed[i] < fitness_vector[i]: #greedy selection
             dif_fitness[i] = fitness_vector[i] - fitness_of_crossed[i]
             SF_P = np.vstack([SF_P,F_P[i,:]])
-            Successful_parents = np.vstack([Successful_parents,population[i,:]])
+            Successful_parents = np.vstack([Successful_parents,crossed_population[i,:]-population[i,:]])
             population[i,:] = crossed_population[i,:]                    # Include the new solution in population
             fitness_vector[i] = fitness_of_crossed[i]
             Nb_successful_parameters = Nb_successful_parameters + 1
@@ -108,17 +108,17 @@ def Selection(crossed_population, population, fitness_vector, fitness_of_crossed
     return population, fitness_vector, difference_fitness,Nb_successful_parameters,SF_P,Successful_parents
 
 #generate F parameter for each dimension to each solution
-def Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters,SF_P,mu_by_dimension,index_mu_by_dimension,mu_archive_size,Successful_parents):  
-    
+def Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters,SF_P,mu_by_dimension,index_mu_by_dimension,mu_archive_size,Successful_parents, population):  
+    norm = np.zeros(D)
     if index_mu_by_dimension>mu_archive_size-1:
        index_mu_by_dimension = 0
     
     #compute the contribution of each dimnension in improving the fitness value
     if Nb_successful_parameters > 0 :
         # 1- normalize the Successful_parents to compute the contribution of each dimension
-        for i in range(Nb_successful_parameters):
-            norm = np.linalg.norm(Successful_parents[i,:])
-            Successful_parents[i,:] = Successful_parents[i,:]/norm
+        for i in range(D):
+            norm[i] = np.max(population[:,i]) - np.min(population[:,i])
+            Successful_parents[:,i] = Successful_parents[:,i]/norm[i]
         
         for i in range(D):
             sum_by_dimension_2 = 0
@@ -127,17 +127,16 @@ def Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters,SF
                 sum_contribute = 0
                 for k in range(D):
                     sum_contribute = sum_contribute + Successful_parents[j,k]
-                sum_by_dimension_2 = sum_by_dimension_2 + ((Successful_parents[j,i]/sum_contribute)*SF_P[j,i])**2
-                sum_by_dimension = sum_by_dimension + ((Successful_parents[j,i]/sum_contribute)*SF_P[j,i]) 
+                sum_by_dimension_2 = sum_by_dimension_2 + ((Successful_parents[j,i]/sum_contribute)*SF_P[j,i])
+                sum_by_dimension = sum_by_dimension + ((Successful_parents[j,i]/sum_contribute)*SF_P[j,i])
          
         #avoid nan values for mu_by_dimension
             if mt.isnan(sum_by_dimension_2/sum_by_dimension) :
                 mu_by_dimension[index_mu_by_dimension,i] = 1/D
             else :
-                mu_by_dimension[index_mu_by_dimension,i] = sum_by_dimension_2/sum_by_dimension
+                mu_by_dimension[index_mu_by_dimension,i] = (sum_by_dimension_2/sum_by_dimension)*1.2
         #normalize mu_by_dimension so that the sum of columns of a given row gives 1
-        norm = np.linalg.norm(mu_by_dimension[index_mu_by_dimension,:])
-        mu_by_dimension[index_mu_by_dimension,:] = mu_by_dimension[index_mu_by_dimension,:]/norm
+      
         index_mu_by_dimension = index_mu_by_dimension + 1 
     
 

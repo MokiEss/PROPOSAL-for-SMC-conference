@@ -1,4 +1,4 @@
 import numpy as np
-x = np.random.uniform(size=5)
+x = 5**0
 
 print(x)
