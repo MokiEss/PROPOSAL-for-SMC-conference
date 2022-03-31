@@ -1,5 +1,6 @@
 import random
 import numpy as np
+
 from sklearn.utils import shuffle
 from eval import gtopx
 from eval import print_results
@@ -7,6 +8,8 @@ from boundaries import Define_boundaries
 import math as mt
 from numpy import linalg as LA
 import topsispy as tp
+from cec2017.functions import all_functions
+
 #generate random solutions between -100 and 100
 def initialization(population, UB, LB,NP,D):
     population = np.random.uniform(LB, UB, size=(NP,D))
@@ -40,6 +43,7 @@ def mutation(population, fitness, mutated_population, NP,D,F_P, number_of_improv
     sign = [1, 1, 1]
    
     operator_index = int(tp.topsis(criteria_values, w, sign)[0])
+    #operator_index = 1
     #print("the strategy to be used is :",operator_index)
     # end multi-criteria selection
     p = 0.1
@@ -107,6 +111,16 @@ def boundaries_handling(UB, LB, population, D, num_benchmark, NP):
         population[i,:] = np.maximum(LB, population[i,:])
     return population
 
+#boundaries handling for cec 2017
+def boundaries_handling_CEC2017(UB, LB, population, D, num_benchmark, NP):
+    for i in range(NP):
+        # Bounding the violating variables to their upper bound
+        population[i, :] = np.minimum(UB, population[i, :])
+        # Bounding the violating variables to their lower bound
+        population[i, :] = np.maximum(LB, population[i, :])
+    return population
+
+
 #evaluation
 def Evaluate_population(function_num, population, fitness, constraints, NP, o,n,m):
     for i in range(NP):
@@ -116,6 +130,24 @@ def Evaluate_population(function_num, population, fitness, constraints, NP, o,n,
             constraints[i,j] = c[j]
     #return the fitness vector of the population and the values for constraints
     return fitness,constraints
+
+
+#evaluation
+def Evaluate_population_CEC2019(function_num, population, fitness, NP, D, bench):
+
+    for i in range(NP):
+        fitness[i] = bench.eval(population[i,:])
+
+    #return the fitness vector of the population and the values for constraints
+    return fitness
+
+def Evaluate_population_CEC2017(function_num, population, fitness, NP, D):
+
+    for i in range(NP):
+        fitness[i] = all_functions[function_num](population[i,:])
+
+    #return the fitness vector of the population and the values for constraints
+    return fitness
 
 #selection of the new generation
 def Selection(crossed_population, population, fitness_vector, fitness_of_crossed, NP, F_P,D):
@@ -165,7 +197,7 @@ def Generate_F_parameter(difference_fitness,D,F_P,NP,Nb_successful_parameters,SF
             if mt.isnan(sum_by_dimension_2/sum_by_dimension) :
                 mu_by_dimension[index_mu_by_dimension,i] = 1/D
             else :
-                mu_by_dimension[index_mu_by_dimension,i] = (sum_by_dimension_2/sum_by_dimension)*1.2
+                mu_by_dimension[index_mu_by_dimension,i] = (sum_by_dimension_2/sum_by_dimension)*1.5
         #normalize mu_by_dimension so that the sum of columns of a given row gives 1
       
         index_mu_by_dimension = index_mu_by_dimension + 1 

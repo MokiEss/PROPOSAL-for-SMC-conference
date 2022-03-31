@@ -1,3 +1,4 @@
+import numpy as np
 def Define_boundaries(num_function) :
     pi=3.14159265359
     if num_function == 1 :
@@ -64,4 +65,29 @@ def Define_boundaries(num_function) :
         xl = [-1000.0,30.0,100.0,30.0,400.0,1000.0,   1.0,1.0,1.0,1.0]
         xu = [0.0,400.0,470.0,400.0,2000.0,6000.0,    9.0,9.0,9.0,9.0]
     return xu, xl, n, m
-        
+
+# define boundaries for CEC 2019 functions
+def Define_boundaries_CEC2019(num_function) :
+    if num_function == 1:
+        D = 9
+        LB = np.zeros((1,D)) - 8192
+        UB = np.zeros((1,D)) + 8192
+    elif num_function == 2:
+        D = 16
+        LB = np.zeros((1, D)) - 16384
+        UB = np.zeros((1, D)) + 16384
+    elif num_function == 3:
+        D = 18
+        LB = np.zeros((1, D)) - 4
+        UB = np.zeros((1, D)) + 4
+    elif num_function == 4 or num_function == 5 or num_function == 6 or num_function == 7 or num_function == 8 or num_function == 9 or num_function == 10:
+        D = 10
+        LB = np.zeros((1, D)) - 100
+        UB = np.zeros((1, D)) + 100
+
+    return D, UB, LB
+
+def Define_boundaries_CEC2017(D) :
+    LB = np.zeros((1, D)) - 100
+    UB = np.zeros((1, D)) + 100
+    return UB, LB
