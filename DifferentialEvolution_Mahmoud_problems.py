@@ -6,7 +6,7 @@ from eval import print_results
 from boundaries import Define_boundaries
 import math as mt
 from numpy import linalg as LA
-import objective_function as OF
+import objective_function2 as OF
 #generate random solutions between -100 and 100
 def initialization(population, UB, LB,NP,D):
     population = np.random.uniform(LB, UB, size=(NP,D))

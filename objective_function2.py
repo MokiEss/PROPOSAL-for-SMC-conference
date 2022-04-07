@@ -88,6 +88,7 @@ class Eval():
                 w_j[item] = 1/(self.mu - gamma_j[item])
             else:
                 w_j[item] = 10000000
+                print("infeasible solution")
             Waiting = Waiting + (w_j[item] * gamma_j[item])
 
         a = (Travel + Waiting)
@@ -105,8 +106,8 @@ class NODEE200():
                                161, 67, 134, 5, 93, 168, 130, 40, 33, 99, 29, 7, 198, 48, 91, 94, 41, 164, 31, 196]
 
         self.p = 10
-        self.mu = 10
-        self.w_max = 100
+        self.mu = 100
+        self.w_max = 1000
 
         self.df_shortest = pd.read_csv("shortest_path_200.csv")
 
@@ -119,7 +120,7 @@ class NODEE200():
 
         solution1 = np.array(solution)
         indices = (-solution1).argsort()[:self.p]
-        opened_list = [self.Candidate_List[i] for i in indices]
+        opened_list = [str(self.Candidate_List[i]) for i in indices]
 
         a = Eval(Candidate_List=self.Candidate_List,
                  df_shortest=self.df_shortest,
@@ -129,7 +130,8 @@ class NODEE200():
                  mu=self.mu,
                  p=self.p).eval()
 
-        solution.objective = a
+        #solution.objective = a
+        return(a)
 
         return (solution)
 
@@ -160,7 +162,7 @@ class NODEE300():
 
         solution1 = np.array(solution)
         indices = (-solution1).argsort()[:self.p]
-        opened_list = [self.Candidate_List[i] for i in indices]
+        opened_list = [str(self.Candidate_List[i]) for i in indices]
 
         a = Eval(Candidate_List=self.Candidate_List,
                  df_shortest=self.df_shortest,
@@ -202,7 +204,7 @@ class NODEE400():
 
         solution1 = np.array(solution)
         indices = (-solution1).argsort()[:self.p]
-        opened_list = [self.Candidate_List[i] for i in indices]
+        opened_list = [str(self.Candidate_List[i]) for i in indices]
 
         a = Eval(Candidate_List=self.Candidate_List,
                  df_shortest=self.df_shortest,
@@ -244,7 +246,7 @@ class NODEE500():
 
         solution1 = np.array(solution)
         indices = (-solution1).argsort()[:self.p]
-        opened_list = [self.Candidate_List[i] for i in indices]
+        opened_list = [str(self.Candidate_List[i]) for i in indices]
 
         a = Eval(Candidate_List=self.Candidate_List,
                  df_shortest=self.df_shortest,
@@ -330,7 +332,7 @@ class NODEE700():
 
         solution1 = np.array(solution)
         indices = (-solution1).argsort()[:self.p]
-        opened_list = [self.Candidate_List[i] for i in indices]
+        opened_list = [str(self.Candidate_List[i]) for i in indices]
 
         a = Eval(Candidate_List=self.Candidate_List,
                  df_shortest=self.df_shortest,
